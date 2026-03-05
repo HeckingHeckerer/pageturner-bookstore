@@ -30,19 +30,8 @@ Categories
 </a>
 @auth
 @if(auth()->user()->isAdmin())
-<a
-
-href="{{ route('admin.books.create') }}" class="hover:bg-indigo-700
-px-3 py-2 rounded-md">
-
-Add Book
-</a>
-<a
-
-href="{{ route('admin.categories.create') }}" class="hover:bg-
-indigo-700 px-3 py-2 rounded-md">
-
-Add Category
+<a href="{{ route('admin.dashboard') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">
+Admin Dashboard
 </a>
 @endif
 @endauth

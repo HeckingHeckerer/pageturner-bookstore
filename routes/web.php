@@ -43,8 +43,13 @@ Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.sh
 Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 // Admin-only routes (Category & Book management)
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+// Admin Dashboard
+Route::get('/', function() {
+    return view('admin.dashboard');
+})->name('dashboard');
 // Category management
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/categories/create', [CategoryController::class,
 'create'])->name('categories.create');
 Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
@@ -55,12 +60,14 @@ Route::put('/categories/{category}', [CategoryController::class,
 Route::delete('/categories/{category}', [CategoryController::class,
 'destroy'])->name('categories.destroy');
 // Book management
+Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
 Route::post('/books', [BookController::class, 'store'])->name('books.store');
 Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
 Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
 Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
+// Orders management
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
 require __DIR__.'/auth.php';
-
-Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
