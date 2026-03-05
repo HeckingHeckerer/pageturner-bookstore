@@ -59,6 +59,8 @@ Route::put('/categories/{category}', [CategoryController::class,
 'update'])->name('categories.update');
 Route::delete('/categories/{category}', [CategoryController::class,
 'destroy'])->name('categories.destroy');
+// API routes for admin modals
+Route::get('/categories/search', [CategoryController::class, 'search'])->name('categories.search');
 // Book management
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
@@ -66,6 +68,8 @@ Route::post('/books', [BookController::class, 'store'])->name('books.store');
 Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
 Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
 Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
+// API routes for admin modals
+Route::get('/books/search', [BookController::class, 'search'])->name('books.search');
 // Orders management
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

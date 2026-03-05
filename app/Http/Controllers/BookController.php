@@ -101,7 +101,53 @@ class BookController extends Controller
     public function destroy(Book $book)
     {
         $book->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Book deleted successfully!'
+            ]);
+        }
+
         return redirect()->route('books.index')
             ->with('success', 'Book deleted successfully!');
+    }
+
+    public function search(Request $request)
+    {
+        $query = Book::with('category');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('author', 'like', "%{$search}%")
+                  ->orWhere('isbn', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        $books = $query->latest()->get();
+
+        return response()->json([
+            'books' => $books->map(function($book) {
+                return [
+                    'id' => $book->id,
+                    'title' => $book->title,
+                    'author' => $book->author,
+                    'isbn' => $book->isbn,
+                    'price' => $book->price,
+                    'stock_quantity' => $book->stock_quantity,
+                    'cover_image' => $book->cover_image,
+                    'category' => [
+                        'id' => $book->category->id,
+                        'name' => $book->category->name,
+                    ]
+                ];
+            })
+        ]);
     }
 }

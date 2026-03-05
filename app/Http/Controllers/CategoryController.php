@@ -58,9 +58,65 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        $cascade = request('cascade', false);
+
+        // Check if category has books and cascade is not requested
+        if ($category->books()->count() > 0 && !$cascade) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete category that contains books. Please remove all books from this category first.'
+                ], 422);
+            }
+            return redirect()->back()
+                ->with('error', 'Cannot delete category that contains books. Please remove all books from this category first.');
+        }
+
+        // If cascade delete is requested, delete all books first
+        if ($cascade) {
+            $booksCount = $category->books()->count();
+            $category->books()->delete(); // This will delete all books in the category
+
+            // Log the cascade deletion for audit purposes
+            \Log::info("Cascade delete: Deleted category '{$category->name}' and {$booksCount} associated books");
+        }
+
         $category->delete();
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $cascade
+                    ? 'Category and all associated books deleted successfully!'
+                    : 'Category deleted successfully!'
+            ]);
+        }
+
         return redirect()->route('categories.index')
-            ->with('success', 'Category deleted successfully!');
+            ->with('success', $cascade
+                ? 'Category and all associated books deleted successfully!'
+                : 'Category deleted successfully!');
+    }
+
+    public function search(Request $request)
+    {
+        $query = Category::withCount('books');
+
+        if ($request->filled('category')) {
+            $query->where('id', $request->category);
+        }
+
+        $categories = $query->get();
+
+        return response()->json([
+            'categories' => $categories->map(function($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'description' => $category->description,
+                    'books_count' => $category->books_count,
+                ];
+            })
+        ]);
     }
 }

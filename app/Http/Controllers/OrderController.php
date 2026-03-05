@@ -87,12 +87,23 @@ class OrderController extends Controller
     }
 
     /**
-     * Display a listing of the user's orders.
+     * Display a listing of the user's orders (or all orders for admin).
      */
     public function index()
     {
-        $orders = Auth::user()->orders()->with('orderItems.book')->latest()->paginate(10);
-        return view('orders.index', compact('orders'));
+        if (auth()->user()->isAdmin()) {
+            // Admin view: show all orders grouped by user
+            $ordersByUser = Order::with(['orderItems.book', 'user'])
+                ->latest()
+                ->get()
+                ->groupBy('user_id');
+
+            return view('admin.orders.index', compact('ordersByUser'));
+        } else {
+            // Customer view: show only user's orders
+            $orders = Auth::user()->orders()->with('orderItems.book')->latest()->paginate(10);
+            return view('orders.index', compact('orders'));
+        }
     }
 
     /**
@@ -213,12 +224,17 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        // Check if user owns this order
-        if ($order->user_id !== Auth::id()) {
+        // Check if user owns this order or is admin
+        if ($order->user_id !== Auth::id() && !auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized access to this order.');
         }
 
-        $order->load('orderItems.book');
-        return view('orders.show', compact('order'));
+        $order->load('orderItems.book', 'user');
+
+        if (auth()->user()->isAdmin()) {
+            return view('admin.orders.show', compact('order'));
+        } else {
+            return view('orders.show', compact('order'));
+        }
     }
 }
