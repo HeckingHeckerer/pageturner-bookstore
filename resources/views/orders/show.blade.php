@@ -13,7 +13,17 @@
                     <h3 class="font-semibold mb-2">Order Details</h3>
                     <p><strong>Order Date:</strong> {{ $order->created_at->format('M d, Y \a\t g:i A') }}</p>
                     <p><strong>Status:</strong>
-                        <span class="px-2 py-1 rounded text-sm {{ $order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ($order->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') }}">
+                        <span class="px-2 py-1 rounded text-sm 
+                            @if($order->status === 'pending')
+                                bg-yellow-100 text-yellow-800
+                            @elseif($order->status === 'completed')
+                                bg-green-100 text-green-800
+                            @elseif($order->status === 'cancelled')
+                                bg-gray-100 text-gray-800
+                            @else
+                                bg-red-100 text-red-800
+                            @endif
+                        ">
                             {{ ucfirst($order->status) }}
                         </span>
                     </p>
@@ -47,8 +57,8 @@
 
                         <div class="text-right">
                             <p class="text-sm text-gray-600">Quantity: {{ $item->quantity }}</p>
-                            <p class="text-sm text-gray-600">Price: ${{ number_format($item->price, 2) }}</p>
-                            <p class="font-semibold">${{ number_format($item->price * $item->quantity, 2) }}</p>
+                            <p class="text-sm text-gray-600">Price: ${{ number_format($item->unit_price, 2) }}</p>
+                            <p class="font-semibold">${{ number_format($item->unit_price * $item->quantity, 2) }}</p>
                         </div>
                     </div>
                 @endforeach
@@ -69,7 +79,67 @@
             <a href="{{ route('books.index') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
                 Continue Shopping
             </a>
+
+            @if($order->status === 'pending')
+                <button type="button" onclick="openCancelModal({{ $order->id }})" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition ml-4">
+                    Cancel Order
+                </button>
+            @endif
         </div>
     </div>
 </div>
+
+<!-- Cancel Order Modal -->
+<div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
+        <div class="flex items-center mb-4">
+            <svg class="h-8 w-8 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 5v.01M7.08 6.36A9 9 0 1021 12a9 9 0 00-13.92-5.64z"></path>
+            </svg>
+            <h3 class="text-xl font-bold text-gray-900">Cancel Order?</h3>
+        </div>
+        
+        <p class="text-gray-600 mb-2">Are you sure you want to cancel this order?</p>
+        <p class="text-sm text-gray-500 mb-6">This action will restore all items to inventory. This cannot be undone.</p>
+        
+        <div class="flex justify-end space-x-3">
+            <button type="button" onclick="closeCancelModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-medium">
+                Keep Order
+            </button>
+            <form id="cancelForm" method="POST" style="display:inline;">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition font-medium">
+                    Yes, Cancel Order
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCancelModal(orderId) {
+    const form = document.getElementById('cancelForm');
+    form.action = `/orders/${orderId}/cancel`;
+    document.getElementById('cancelModal').classList.remove('hidden');
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside of it
+document.getElementById('cancelModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCancelModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCancelModal();
+    }
+});
+</script>
 @endsection

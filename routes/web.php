@@ -40,6 +40,7 @@ Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 // Admin-only routes (Category & Book management)
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {

@@ -122,7 +122,7 @@ class OrderController extends Controller
                 'order_id' => $order->id,
                 'book_id' => $book->id,
                 'quantity' => $quantity,
-                'price' => $book->price
+                'unit_price' => $book->price
             ]);
 
             // Update stock
@@ -148,7 +148,7 @@ class OrderController extends Controller
                 $orderItems[] = [
                     'book_id' => $bookId,
                     'quantity' => $quantity,
-                    'price' => $book->price
+                    'unit_price' => $book->price
                 ];
             } else {
                 return redirect()->route('cart')->with('error', 'Some items are out of stock!');
@@ -179,11 +179,44 @@ class OrderController extends Controller
     }
 
     /**
+     * Cancel an order (restore stock and update status).
+     */
+    public function cancel(Order $order)
+    {
+        // Check if user owns this order
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this order.');
+        }
+
+        // Only allow cancelling pending orders
+        if ($order->status !== 'pending') {
+            return redirect()->back()->with('error', 'Only pending orders can be cancelled.');
+        }
+
+        // Restore stock for all items in the order
+        foreach ($order->orderItems as $item) {
+            $book = Book::find($item->book_id);
+            if ($book) {
+                $book->increment('stock_quantity', $item->quantity);
+            }
+        }
+
+        // Update order status
+        $order->update(['status' => 'cancelled']);
+
+        return redirect()->route('orders.index')->with('success', 'Order cancelled successfully. Stock has been restored.');
+    }
+
+    /**
      * Display the specified order.
      */
     public function show(Order $order)
     {
-        $this->authorize('view', $order);
+        // Check if user owns this order
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this order.');
+        }
+
         $order->load('orderItems.book');
         return view('orders.show', compact('order'));
     }
