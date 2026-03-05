@@ -6,6 +6,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
+
+
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 // Book browsing (public)
@@ -54,3 +56,5 @@ Route::put('/books/{book}', [BookController::class, 'update'])->name('books.upda
 Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
 });
 require __DIR__.'/auth.php';
+
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');

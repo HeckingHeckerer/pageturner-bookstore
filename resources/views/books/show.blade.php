@@ -17,7 +17,7 @@
 
         {{-- Book Details --}}
         <div class="md:w-2/3 p-8">
-            <span class="text-indigo-600 text-sm font-medium">{{ $book->category->name }}</span>
+            <span class="text-indigo-600 text-sm font-medium ">{{ $book->category->name }}</span>
             <h1 class="text-3xl font-bold text-gray-900 mt-2">{{ $book->title }}</h1>
             <p class="text-xl text-gray-600 mt-1">by {{ $book->author }}</p>
 
@@ -48,8 +48,8 @@
             </div>
 
             <div class="mt-6">
-                <h3 class="font-semibold text-gray-800">Description</h3>
-                <p class="text-gray-600 mt-2">{{ $book->description }}</p>
+                <h3 class="font-semibold text-gray-800 ">Description</h3>
+                <p class="text-gray-600 mt-2 ">{{ $book->description }}</p>
             </div>
 
             {{-- Admin Actions --}}
@@ -75,7 +75,7 @@
 
 {{-- Reviews Section --}}
 <div class="mt-8">
-    <h2 class="text-2xl font-bold mb-6">Customer Reviews</h2>
+    <h2 class="text-2xl font-bold mb-6 text-white">Customer Reviews</h2>
 
     {{-- Review Form --}}
     @auth

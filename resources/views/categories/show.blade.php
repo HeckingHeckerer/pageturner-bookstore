@@ -5,12 +5,12 @@
 
     {{-- Category Header --}}
     <div class="mb-4">
-        <h1 class="text-2xl font-bold">
+        <h1 class="text-2xl font-bold text-white">
             {{ $category->name }}
         </h1>
 
         @if($category->description)
-            <p class="text-gray-600 mt-2">
+            <p class="text-gray-600 mt-2 ">
                 {{ $category->description }}
             </p>
         @endif
@@ -19,7 +19,7 @@
     <hr class="my-4">
 
     {{-- Books Section --}}
-    <h2 class="text-xl font-semibold mb-3">
+   <h2 class="text-xl font-semibold mb-3 text-purple-800">
         Books in this Category
     </h2>
 
@@ -27,7 +27,7 @@
         <div class="grid grid-cols-3 gap-4">
             @foreach($books as $book)
                 <div class="border p-3 rounded shadow-sm">
-                    <h3 class="font-bold">
+                    <h3 class="font-bold text-white">
                         <a href="{{ route('books.show', $book) }}">
                             {{ $book->title }}
                         </a>

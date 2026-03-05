@@ -3,7 +3,7 @@
 @section('title', 'All Books - PageTurner')
 
 @section('header')
-    <h1 class="text-3xl font-bold text-gray-900">All Books</h1>
+    <h1 class="text-3xl font-bold text-purple-900">All Books</h1>
 @endsection
 
 @section('content')
