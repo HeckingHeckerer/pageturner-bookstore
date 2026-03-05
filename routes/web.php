@@ -28,6 +28,11 @@ Route::post('/books/{book}/reviews', [ReviewController::class,
 'store'])->name('reviews.store');
 Route::delete('/reviews/{review}', [ReviewController::class,
 'destroy'])->name('reviews.destroy');
+// Cart routes
+Route::post('/cart/add/{book}', [OrderController::class, 'addToCart'])->name('cart.add');
+Route::delete('/cart/remove/{book}', [OrderController::class, 'removeFromCart'])->name('cart.remove');
+Route::patch('/cart/update/{book}', [OrderController::class, 'updateCart'])->name('cart.update');
+Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
 // Order routes
 
 

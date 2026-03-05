@@ -33,7 +33,7 @@
                     </svg>
                 @endif
             @endfor
-            <span class="ml-1 text-sm text-gray-500">({{ $book->reviews->count() }})</span>
+            <span class="ml-1 text-sm text-gray-500">rated by {{ $book->reviews->count() }} {{ Str::plural('user', $book->reviews->count()) }}</span>
         </div>
 
         <a href="{{ route('books.show', $book) }}" 

@@ -67,6 +67,12 @@ Register
 </a>
 @endguest
 @auth
+<a href="{{ route('cart') }}"
+
+class="hover:bg-indigo-700 px-3 py-2 rounded-md">
+
+Cart {{ session('cart') ? '(' . count(session('cart')) . ')' : '' }}
+</a>
 <a href="{{ route('orders.index') }}"
 
 class="hover:bg-indigo-700 px-3 py-2 rounded-md">

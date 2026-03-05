@@ -43,6 +43,27 @@
                 </span>
             </div>
 
+            @if($book->stock_quantity > 0)
+                <div class="mt-6 flex space-x-4">
+                    <form action="{{ route('cart.add', $book) }}" method="POST" class="inline">
+                        @csrf
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                            Add to Cart
+                        </button>
+                    </form>
+
+                    <form action="{{ route('orders.store') }}" method="POST" class="inline">
+                        @csrf
+                        <input type="hidden" name="book_id" value="{{ $book->id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                            Buy Now
+                        </button>
+                    </form>
+                </div>
+            @endif
+
             <div class="mt-4">
                 <p class="text-gray-600 text-sm"><strong>ISBN:</strong> {{ $book->isbn }}</p>
             </div>
@@ -85,12 +106,14 @@
                 @csrf
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Rating</label>
-                    <select name="rating" class="border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                        <option value="">Select rating</option>
-                        @for($i = 5; $i >= 1; $i--)
-                            <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                    <div class="flex space-x-1">
+                        @for($i = 1; $i <= 5; $i++)
+                            <svg class="h-8 w-8 cursor-pointer star-rating text-gray-300 hover:text-yellow-400" data-rating="{{ $i }}" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
                         @endfor
-                    </select>
+                    </div>
+                    <input type="hidden" name="rating" id="rating-input" required>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Comment</label>
@@ -144,4 +167,55 @@
         </x-alert>
     @endforelse
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star-rating');
+    const ratingInput = document.getElementById('rating-input');
+    let selectedRating = 0;
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            ratingInput.value = selectedRating;
+
+            // Update star colors
+            stars.forEach((s, index) => {
+                if (index < selectedRating) {
+                    s.classList.remove('text-gray-300');
+                    s.classList.add('text-yellow-400');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-300');
+                }
+            });
+        });
+
+        star.addEventListener('mouseover', function() {
+            const rating = parseInt(this.dataset.rating);
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove('text-gray-300');
+                    s.classList.add('text-yellow-400');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-300');
+                }
+            });
+        });
+
+        star.addEventListener('mouseout', function() {
+            stars.forEach((s, index) => {
+                if (index < selectedRating) {
+                    s.classList.remove('text-gray-300');
+                    s.classList.add('text-yellow-400');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-300');
+                }
+            });
+        });
+    });
+});
+</script>
 @endsection
