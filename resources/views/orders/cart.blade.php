@@ -33,25 +33,25 @@
                     </thead>
                     <tbody id="cart-items">
                         @foreach($cartItems as $item)
-                            <tr class="border-b" data-book-id="{{ $item['book']->id }}" data-price="{{ $item['book']->price }}">
+                            <tr class="border-b" data-book-id="{{ $item->book->id }}" data-price="{{ $item->book->price }}">
                                 <td class="py-4">
                                     <div class="flex items-center">
-                                        <img src="{{ $item['book']->cover_image ? asset('storage/'.$item['book']->cover_image) : 'https://via.placeholder.com/50' }}"
-                                             alt="{{ $item['book']->title }}"
+                                        <img src="{{ $item->book->cover_image ? asset('storage/'.$item->book->cover_image) : 'https://via.placeholder.com/50' }}"
+                                             alt="{{ $item->book->title }}"
                                              class="w-12 h-16 object-cover rounded mr-4">
                                         <div>
-                                            <h3 class="font-semibold">{{ $item['book']->title }}</h3>
-                                            <p class="text-sm text-gray-600">by {{ $item['book']->author }}</p>
+                                            <h3 class="font-semibold">{{ $item->book->title }}</h3>
+                                            <p class="text-sm text-gray-600">by {{ $item->book->author }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 item-price">${{ number_format($item['book']->price, 2) }}</td>
+                                <td class="py-4 item-price">${{ number_format($item->book->price, 2) }}</td>
                                 <td class="py-4">
-                                    <input type="number" class="quantity-input w-16 border rounded px-2 py-1" value="{{ $item['quantity'] }}" min="1" max="{{ $item['book']->stock_quantity }}" data-book-id="{{ $item['book']->id }}">
+                                    <input type="number" class="quantity-input w-16 border rounded px-2 py-1" value="{{ $item->quantity }}" min="1" max="{{ $item->book->stock_quantity }}" data-book-id="{{ $item->book->id }}">
                                 </td>
-                                <td class="py-4 item-subtotal">${{ number_format($item['subtotal'], 2) }}</td>
+                                <td class="py-4 item-subtotal">${{ number_format($item->book->price * $item->quantity, 2) }}</td>
                                 <td class="py-4">
-                                    <form action="{{ route('cart.remove', $item['book']) }}" method="POST">
+                                    <form action="{{ route('cart.remove', $item->book) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Remove</button>

@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Book;
+use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-//tesst
 class OrderController extends Controller
 {
     /**
@@ -16,21 +16,8 @@ class OrderController extends Controller
      */
     public function cart()
     {
-        $cart = session()->get('cart', []);
-        $cartItems = [];
-        $total = 0;
-
-        foreach ($cart as $bookId => $quantity) {
-            $book = Book::find($bookId);
-            if ($book) {
-                $cartItems[] = [
-                    'book' => $book,
-                    'quantity' => $quantity,
-                    'subtotal' => $book->price * $quantity
-                ];
-                $total += $book->price * $quantity;
-            }
-        }
+        $cartItems = Auth::user()->cart()->with('book')->get();
+        $total = $cartItems->sum(fn($item) => $item->book->price * $item->quantity);
 
         return view('orders.cart', compact('cartItems', 'total'));
     }
@@ -40,16 +27,22 @@ class OrderController extends Controller
      */
     public function addToCart(Book $book, Request $request)
     {
-        $cart = session()->get('cart', []);
         $quantity = $request->get('quantity', 1);
+        $user = Auth::user();
 
-        if (isset($cart[$book->id])) {
-            $cart[$book->id] += $quantity;
+        $cartItem = Cart::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->first();
+
+        if ($cartItem) {
+            $cartItem->increment('quantity', $quantity);
         } else {
-            $cart[$book->id] = $quantity;
+            Cart::create([
+                'user_id' => $user->id,
+                'book_id' => $book->id,
+                'quantity' => $quantity
+            ]);
         }
-
-        session()->put('cart', $cart);
 
         return redirect()->back()->with('success', 'Book added to cart!');
     }
@@ -57,21 +50,21 @@ class OrderController extends Controller
     /**
      * Update cart item quantity.
      */
-    /**
-     * Update cart item quantity.
-     */
     public function updateCart(Book $book, Request $request)
     {
-        $cart = session()->get('cart', []);
+        $user = Auth::user();
         $quantity = $request->input('quantity', 1);
 
         if ($quantity > 0) {
-            $cart[$book->id] = $quantity;
+            Cart::updateOrCreate(
+                ['user_id' => $user->id, 'book_id' => $book->id],
+                ['quantity' => $quantity]
+            );
         } else {
-            unset($cart[$book->id]);
+            Cart::where('user_id', $user->id)
+                ->where('book_id', $book->id)
+                ->delete();
         }
-
-        session()->put('cart', $cart);
 
         // Return JSON for AJAX requests, redirect for form submissions
         if ($request->wantsJson()) {
@@ -86,9 +79,9 @@ class OrderController extends Controller
      */
     public function removeFromCart(Book $book)
     {
-        $cart = session()->get('cart', []);
-        unset($cart[$book->id]);
-        session()->put('cart', $cart);
+        Cart::where('user_id', Auth::id())
+            ->where('book_id', $book->id)
+            ->delete();
 
         return redirect()->back()->with('success', 'Book removed from cart!');
     }
@@ -140,22 +133,22 @@ class OrderController extends Controller
         }
 
         // Handle cart checkout
-        $cart = session()->get('cart', []);
+        $cartItems = Auth::user()->cart()->with('book')->get();
 
-        if (empty($cart)) {
+        if ($cartItems->isEmpty()) {
             return redirect()->route('cart')->with('error', 'Your cart is empty!');
         }
 
         $total = 0;
         $orderItems = [];
 
-        foreach ($cart as $bookId => $quantity) {
-            $book = Book::find($bookId);
-            if ($book && $book->stock_quantity >= $quantity) {
-                $total += $book->price * $quantity;
+        foreach ($cartItems as $cartItem) {
+            $book = $cartItem->book;
+            if ($book->stock_quantity >= $cartItem->quantity) {
+                $total += $book->price * $cartItem->quantity;
                 $orderItems[] = [
-                    'book_id' => $bookId,
-                    'quantity' => $quantity,
+                    'book_id' => $book->id,
+                    'quantity' => $cartItem->quantity,
                     'unit_price' => $book->price
                 ];
             } else {
@@ -180,8 +173,8 @@ class OrderController extends Controller
             $book->decrement('stock_quantity', $item['quantity']);
         }
 
-        // Clear cart
-        session()->forget('cart');
+        // Clear cart from database
+        Auth::user()->cart()->delete();
 
         return redirect()->route('orders.show', $order)->with('success', 'Order placed successfully!');
     }

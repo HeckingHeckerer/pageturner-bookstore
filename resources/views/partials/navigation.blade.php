@@ -71,7 +71,7 @@ Register
 
 class="hover:bg-indigo-700 px-3 py-2 rounded-md">
 
-Cart {{ session('cart') ? '(' . count(session('cart')) . ')' : '' }}
+Cart {{ auth()->user()->cart()->count() ? '(' . auth()->user()->cart()->count() . ')' : '' }}
 </a>
 <a href="{{ route('orders.index') }}"
 
