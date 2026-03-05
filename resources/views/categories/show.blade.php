@@ -27,8 +27,17 @@
         <div class="grid grid-cols-3 gap-4">
             @foreach($books as $book)
                 <div class="border p-3 rounded shadow-sm">
+                    {{-- image placeholder above title --}}
+                    <div class="mb-2">
+                        <img
+                            src="{{ $book->cover_image ? asset('storage/'.$book->cover_image) : 'https://via.placeholder.com/150' }}"
+                            alt="{{ $book->title }}"
+                            class="w-full h-40 object-cover rounded"
+                        >
+                    </div>
+
                     <h3 class="font-bold text-white">
-                        <a href="{{ route('books.show', $book) }}">
+                        <a href="{{ route('books.show', $book) }}" class="hover:text-blue-400">
                             {{ $book->title }}
                         </a>
                     </h3>
