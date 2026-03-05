@@ -28,6 +28,9 @@
                         <a href="{{ route('admin.books.create') }}" class="block w-full text-center bg-indigo-100 text-indigo-600 py-2 rounded hover:bg-indigo-200 transition">
                             Add New Book
                         </a>
+                        <a href="{{ route('admin.books.index') }}" class="block w-full text-center bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 transition" onclick="openEditBooksModal(); return false;">
+                            Edit Books
+                        </a>
                         <a href="{{ route('admin.books.index') }}" class="block w-full text-center bg-red-600 text-white py-2 rounded hover:bg-red-700 transition" onclick="openDeleteBooksModal(); return false;">
                             Delete Books
                         </a>
@@ -51,6 +54,9 @@
                         </a>
                         <a href="{{ route('admin.categories.create') }}" class="block w-full text-center bg-green-100 text-green-600 py-2 rounded hover:bg-green-200 transition">
                             Add New Category
+                        </a>
+                        <a href="{{ route('admin.categories.index') }}" class="block w-full text-center bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 transition" onclick="openEditCategoriesModal(); return false;">
+                            Edit Categories
                         </a>
                         <a href="{{ route('admin.categories.index') }}" class="block w-full text-center bg-red-600 text-white py-2 rounded hover:bg-red-700 transition" onclick="openDeleteCategoriesModal(); return false;">
                             Delete Categories
@@ -100,7 +106,7 @@
 <div id="deleteBooksModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
         <div class="flex justify-between items-center p-6 border-b">
-            <h3 class="text-xl font-bold text-gray-900">Delete Books</h3>
+            <h3 id="booksModalTitle" class="text-xl font-bold text-gray-900">Delete Books</h3>
             <button onclick="closeDeleteBooksModal()" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -155,7 +161,7 @@
 <div id="deleteCategoriesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
         <div class="flex justify-between items-center p-6 border-b">
-            <h3 class="text-xl font-bold text-gray-900">Delete Categories</h3>
+            <h3 id="categoriesModalTitle" class="text-xl font-bold text-gray-900">Delete Categories</h3>
             <button onclick="closeDeleteCategoriesModal()" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -212,9 +218,19 @@
 <script>
 let deleteItemType = '';
 let deleteItemId = '';
+let modalMode = 'delete'; // 'delete' or 'edit'
+
+function openEditBooksModal() {
+    modalMode = 'edit';
+    document.getElementById('deleteBooksModal').classList.remove('hidden');
+    document.getElementById('booksModalTitle').textContent = 'Edit Books';
+    loadBooks();
+}
 
 function openDeleteBooksModal() {
+    modalMode = 'delete';
     document.getElementById('deleteBooksModal').classList.remove('hidden');
+    document.getElementById('booksModalTitle').textContent = 'Delete Books';
     loadBooks();
 }
 
@@ -222,8 +238,17 @@ function closeDeleteBooksModal() {
     document.getElementById('deleteBooksModal').classList.add('hidden');
 }
 
-function openDeleteCategoriesModal() {
+function openEditCategoriesModal() {
+    modalMode = 'edit';
     document.getElementById('deleteCategoriesModal').classList.remove('hidden');
+    document.getElementById('categoriesModalTitle').textContent = 'Edit Categories';
+    loadCategories();
+}
+
+function openDeleteCategoriesModal() {
+    modalMode = 'delete';
+    document.getElementById('deleteCategoriesModal').classList.remove('hidden');
+    document.getElementById('categoriesModalTitle').textContent = 'Delete Categories';
     loadCategories();
 }
 
@@ -266,6 +291,16 @@ function loadBooks() {
         }
 
         data.books.forEach(book => {
+            const actionButton = modalMode === 'edit'
+                ? `<button onclick="editBook(${book.id})"
+                        class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 transition">
+                        Edit Book
+                    </button>`
+                : `<button onclick="confirmDeleteBook(${book.id}, '${book.title}')"
+                        class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition">
+                        Delete Book
+                    </button>`;
+
             const bookCard = `
                 <div class="bg-white border rounded-lg shadow-sm p-4">
                     <div class="flex items-start space-x-4">
@@ -282,10 +317,7 @@ function loadBooks() {
                         </div>
                     </div>
                     <div class="mt-4">
-                        <button onclick="confirmDeleteBook(${book.id}, '${book.title}')"
-                                class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition">
-                            Delete Book
-                        </button>
+                        ${actionButton}
                     </div>
                 </div>
             `;
@@ -319,6 +351,16 @@ function loadCategories() {
 
         data.categories.forEach(category => {
             const hasBooks = category.books_count > 0;
+            const actionButton = modalMode === 'edit'
+                ? `<button onclick="editCategory(${category.id})"
+                        class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 transition">
+                        Edit Category
+                    </button>`
+                : `<button onclick="confirmDeleteCategory(${category.id}, '${category.name}', ${category.books_count})"
+                        class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition">
+                        ${hasBooks ? 'Delete Category & Books' : 'Delete Category'}
+                    </button>`;
+
             const categoryCard = `
                 <div class="bg-white border rounded-lg shadow-sm p-4 ${hasBooks ? 'border-orange-200 bg-orange-50' : ''}">
                     <div class="flex items-start justify-between mb-2">
@@ -327,10 +369,7 @@ function loadCategories() {
                     </div>
                     <p class="text-gray-600 mb-2">${category.books_count} ${category.books_count === 1 ? 'book' : 'books'}</p>
                     <p class="text-sm text-gray-500 mb-4">${category.description || 'No description available.'}</p>
-                    <button onclick="confirmDeleteCategory(${category.id}, '${category.name}', ${category.books_count})"
-                            class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition">
-                        ${hasBooks ? 'Delete Category & Books' : 'Delete Category'}
-                    </button>
+                    ${actionButton}
                 </div>
             `;
             container.innerHTML += categoryCard;
@@ -348,6 +387,14 @@ function confirmDeleteBook(bookId, bookTitle) {
     document.getElementById('confirmTitle').textContent = 'Delete Book';
     document.getElementById('confirmMessage').textContent = `Are you sure you want to delete "${bookTitle}"? This action cannot be undone.`;
     document.getElementById('deleteConfirmModal').classList.remove('hidden');
+}
+
+function editBook(bookId) {
+    window.location.href = `/admin/books/${bookId}/edit`;
+}
+
+function editCategory(categoryId) {
+    window.location.href = `/admin/categories/${categoryId}/edit`;
 }
 
 function confirmDeleteCategory(categoryId, categoryName, booksCount) {
