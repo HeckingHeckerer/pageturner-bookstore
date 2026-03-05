@@ -57,10 +57,13 @@ class OrderController extends Controller
     /**
      * Update cart item quantity.
      */
+    /**
+     * Update cart item quantity.
+     */
     public function updateCart(Book $book, Request $request)
     {
         $cart = session()->get('cart', []);
-        $quantity = $request->get('quantity', 1);
+        $quantity = $request->input('quantity', 1);
 
         if ($quantity > 0) {
             $cart[$book->id] = $quantity;
@@ -69,6 +72,11 @@ class OrderController extends Controller
         }
 
         session()->put('cart', $cart);
+
+        // Return JSON for AJAX requests, redirect for form submissions
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Cart updated!']);
+        }
 
         return redirect()->back()->with('success', 'Cart updated!');
     }

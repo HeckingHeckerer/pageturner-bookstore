@@ -115,24 +115,18 @@
                 rows.forEach(row => {
                     const bookId = row.getAttribute('data-book-id');
                     const quantity = row.querySelector('.quantity-input').value;
-                    const price = parseFloat(row.getAttribute('data-price'));
 
-                    // Auto-submit quantity updates to backend
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `/cart/update/` + bookId;
-                    form.style.display = 'none';
-
-                    form.innerHTML = `
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="quantity" value="${quantity}">
-                    `;
-
-                    // Optional: You can submit this form, but for now just calculate client-side
-                    // document.body.appendChild(form);
-                    // form.submit();
-                    // document.body.removeChild(form);
+                    // Send quantity update to backend via fetch
+                    fetch(`/cart/update/${bookId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        },
+                        body: JSON.stringify({
+                            quantity: parseInt(quantity)
+                        })
+                    }).catch(error => console.error('Error updating cart:', error));
                 });
             }
 
