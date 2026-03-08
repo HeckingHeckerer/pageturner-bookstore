@@ -53,14 +53,15 @@
                         </button>
                     </form>
 
-                    <form action="{{ route('orders.store') }}" method="POST" class="inline">
-                        @csrf
-                        <input type="hidden" name="book_id" value="{{ $book->id }}">
-                        <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                    @auth
+                        <button type="button" onclick="openBuyNowModal({{ $book->id }}, '{{ $book->title }}', '{{ $book->author }}', {{ $book->price }}, '{{ $book->cover_image ? asset('storage/'.$book->cover_image) : 'https://via.placeholder.com/80' }}')" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
                             Buy Now
                         </button>
-                    </form>
+                    @else
+                        <a href="{{ route('login') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition inline-block">
+                            Buy Now
+                        </a>
+                    @endauth
                 </div>
             @endif
 
@@ -216,6 +217,164 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+});
+</script>
+
+<!-- Buy Now Modal -->
+<div id="buyNowModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-4 w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center mb-4">
+            <svg class="h-8 w-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <h3 class="text-xl font-bold text-gray-900">Confirm Your Purchase</h3>
+        </div>
+        
+        <div class="mb-6">
+            <h4 class="font-semibold mb-4">Product Details</h4>
+            <div class="flex items-center border rounded-lg p-4 bg-gray-50">
+                <img id="modal-book-image" src="" alt="Book Cover" class="w-16 h-20 object-cover rounded mr-4">
+                <div class="flex-1">
+                    <h5 id="modal-book-title" class="font-semibold text-lg"></h5>
+                    <p id="modal-book-author" class="text-gray-600"></p>
+                    <p class="text-lg font-bold text-green-600 mt-1" id="modal-book-price"></p>
+                </div>
+            </div>
+        </div>
+
+        <form id="buyNowForm" action="{{ route('orders.store') }}" method="POST">
+            @csrf
+            <input type="hidden" id="modal-book-id" name="book_id" value="">
+            <input type="hidden" name="quantity" value="1">
+            
+            <div class="mb-6">
+                <h4 class="font-semibold mb-4">Shipping Address</h4>
+                <div id="existing-address-section">
+                    <div class="border rounded-lg p-4 bg-blue-50">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h5 class="font-medium text-blue-900">Your Default Shipping Address</h5>
+                                <div id="existing-address-display" class="mt-2 text-gray-700">
+                                    <!-- Address will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <button type="button" onclick="editAddress()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Change
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="address-form-section" class="hidden">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="shipping_address" class="block text-sm font-medium text-gray-700">Address</label>
+                            <input type="text" id="shipping_address" name="shipping_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="shipping_city" class="block text-sm font-medium text-gray-700">City</label>
+                                <input type="text" id="shipping_city" name="shipping_city" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="shipping_state" class="block text-sm font-medium text-gray-700">State</label>
+                                <input type="text" id="shipping_state" name="shipping_state" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="shipping_zip" class="block text-sm font-medium text-gray-700">ZIP Code</label>
+                                <input type="text" id="shipping_zip" name="shipping_zip" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="shipping_country" class="block text-sm font-medium text-gray-700">Country</label>
+                                <input type="text" id="shipping_country" name="shipping_country" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="save_as_default" name="save_as_default" checked class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                            <label for="save_as_default" class="ml-2 block text-sm text-gray-900">
+                                Save as my default shipping address
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeBuyNowModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-medium">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 transition font-medium">
+                    Confirm Purchase
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openBuyNowModal(bookId, title, author, price, image) {
+    // Populate product details
+    document.getElementById('modal-book-id').value = bookId;
+    document.getElementById('modal-book-title').textContent = title;
+    document.getElementById('modal-book-author').textContent = 'by ' + author;
+    document.getElementById('modal-book-price').textContent = '$' + price.toFixed(2);
+    document.getElementById('modal-book-image').src = image;
+
+    // Check if user has default address
+    @auth
+        @if(Auth::user()->default_shipping_address)
+            // Show existing address
+            document.getElementById('existing-address-section').classList.remove('hidden');
+            document.getElementById('address-form-section').classList.add('hidden');
+            document.getElementById('existing-address-display').innerHTML = `
+                <p>{{ Auth::user()->default_shipping_address }}</p>
+                <p>{{ Auth::user()->default_shipping_city }}, {{ Auth::user()->default_shipping_state }} {{ Auth::user()->default_shipping_zip }}</p>
+                <p>{{ Auth::user()->default_shipping_country }}</p>
+            `;
+        @else
+            // Show address form
+            document.getElementById('existing-address-section').classList.add('hidden');
+            document.getElementById('address-form-section').classList.remove('hidden');
+        @endif
+    @endauth
+
+    document.getElementById('buyNowModal').classList.remove('hidden');
+}
+
+function closeBuyNowModal() {
+    document.getElementById('buyNowModal').classList.add('hidden');
+}
+
+function editAddress() {
+    // Populate form with existing address if available
+    @auth
+        @if(Auth::user()->default_shipping_address)
+            document.getElementById('shipping_address').value = '{{ Auth::user()->default_shipping_address }}';
+            document.getElementById('shipping_city').value = '{{ Auth::user()->default_shipping_city }}';
+            document.getElementById('shipping_state').value = '{{ Auth::user()->default_shipping_state }}';
+            document.getElementById('shipping_zip').value = '{{ Auth::user()->default_shipping_zip }}';
+            document.getElementById('shipping_country').value = '{{ Auth::user()->default_shipping_country }}';
+        @endif
+    @endauth
+
+    document.getElementById('existing-address-section').classList.add('hidden');
+    document.getElementById('address-form-section').classList.remove('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('buyNowModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBuyNowModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeBuyNowModal();
+    }
 });
 </script>
 @endsection

@@ -111,6 +111,15 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate shipping address
+        $request->validate([
+            'shipping_address' => 'required|string|max:255',
+            'shipping_city' => 'required|string|max:255',
+            'shipping_state' => 'required|string|max:255',
+            'shipping_zip' => 'required|string|max:20',
+            'shipping_country' => 'required|string|max:255',
+        ]);
+
         // Check if it's a direct purchase
         if ($request->has('book_id')) {
             $book = Book::findOrFail($request->book_id);
@@ -122,11 +131,16 @@ class OrderController extends Controller
 
             $total = $book->price * $quantity;
 
-            // Create order
+            // Create order with shipping info
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'total_amount' => $total,
-                'status' => 'pending'
+                'status' => 'pending',
+                'shipping_address' => $request->shipping_address,
+                'shipping_city' => $request->shipping_city,
+                'shipping_state' => $request->shipping_state,
+                'shipping_zip' => $request->shipping_zip,
+                'shipping_country' => $request->shipping_country,
             ]);
 
             // Create order item
@@ -139,6 +153,17 @@ class OrderController extends Controller
 
             // Update stock
             $book->decrement('stock_quantity', $quantity);
+
+            // Save as default shipping address if requested
+            if ($request->has('save_as_default')) {
+                Auth::user()->update([
+                    'default_shipping_address' => $request->shipping_address,
+                    'default_shipping_city' => $request->shipping_city,
+                    'default_shipping_state' => $request->shipping_state,
+                    'default_shipping_zip' => $request->shipping_zip,
+                    'default_shipping_country' => $request->shipping_country,
+                ]);
+            }
 
             return redirect()->route('orders.show', $order)->with('success', 'Order placed successfully!');
         }
@@ -167,11 +192,16 @@ class OrderController extends Controller
             }
         }
 
-        // Create order
+        // Create order with shipping info
         $order = Order::create([
             'user_id' => Auth::id(),
             'total_amount' => $total,
-            'status' => 'pending'
+            'status' => 'pending',
+            'shipping_address' => $request->shipping_address,
+            'shipping_city' => $request->shipping_city,
+            'shipping_state' => $request->shipping_state,
+            'shipping_zip' => $request->shipping_zip,
+            'shipping_country' => $request->shipping_country,
         ]);
 
         // Create order items
@@ -186,6 +216,17 @@ class OrderController extends Controller
 
         // Clear cart from database
         Auth::user()->cart()->delete();
+
+        // Save as default shipping address if requested
+        if ($request->has('save_as_default')) {
+            Auth::user()->update([
+                'default_shipping_address' => $request->shipping_address,
+                'default_shipping_city' => $request->shipping_city,
+                'default_shipping_state' => $request->shipping_state,
+                'default_shipping_zip' => $request->shipping_zip,
+                'default_shipping_country' => $request->shipping_country,
+            ]);
+        }
 
         return redirect()->route('orders.show', $order)->with('success', 'Order placed successfully!');
     }
@@ -217,6 +258,34 @@ class OrderController extends Controller
         $order->update(['status' => 'cancelled']);
 
         return redirect()->route('orders.index')->with('success', 'Order cancelled successfully. Stock has been restored.');
+    }
+
+    /**
+     * Update the shipping address for an order.
+     */
+    public function updateShipping(Order $order, Request $request)
+    {
+        // Check if user owns this order
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this order.');
+        }
+
+        // Only allow updating shipping for pending orders
+        if ($order->status !== 'pending') {
+            return redirect()->back()->with('error', 'Shipping address can only be updated for pending orders.');
+        }
+
+        $request->validate([
+            'shipping_address' => 'required|string|max:255',
+            'shipping_city' => 'required|string|max:255',
+            'shipping_state' => 'required|string|max:255',
+            'shipping_zip' => 'required|string|max:20',
+            'shipping_country' => 'required|string|max:255',
+        ]);
+
+        $order->update($request->only(['shipping_address', 'shipping_city', 'shipping_state', 'shipping_zip', 'shipping_country']));
+
+        return redirect()->back()->with('success', 'Shipping address updated successfully.');
     }
 
     /**

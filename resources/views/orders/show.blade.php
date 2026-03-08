@@ -34,7 +34,12 @@
                     <h3 class="font-semibold mb-2">Shipping Information</h3>
                     <p><strong>Name:</strong> {{ $order->user->name }}</p>
                     <p><strong>Email:</strong> {{ $order->user->email }}</p>
-                    <!-- Add more shipping fields if needed -->
+                    <div class="mt-2">
+                        <p><strong>Shipping Address:</strong></p>
+                        <p>{{ $order->shipping_address }}</p>
+                        <p>{{ $order->shipping_city }}, {{ $order->shipping_state }} {{ $order->shipping_zip }}</p>
+                        <p>{{ $order->shipping_country }}</p>
+                    </div>
                 </div>
             </div>
         </div>

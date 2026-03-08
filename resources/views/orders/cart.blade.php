@@ -67,11 +67,75 @@
                 <div class="text-xl font-bold">
                     Total: <span id="cart-total">${{ number_format($total, 2) }}</span>
                 </div>
-                <form action="{{ route('orders.store') }}" method="POST" id="checkout-form">
+                <button type="button" onclick="openCheckoutModal()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                    Checkout
+                </button>
+            </div>
+        </div>
+
+        <!-- Checkout Modal -->
+        <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg mx-4 w-full">
+                <div class="flex items-center mb-4">
+                    <svg class="h-8 w-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    <h3 class="text-xl font-bold text-gray-900">Complete Your Order</h3>
+                </div>
+                
+                <form id="checkoutForm" action="{{ route('orders.store') }}" method="POST">
                     @csrf
-                    <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
-                        Place Order
-                    </button>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="shipping_address" class="block text-sm font-medium text-gray-700">Shipping Address</label>
+                            <input type="text" id="shipping_address" name="shipping_address" required 
+                                   value="{{ Auth::user()->default_shipping_address ?? '' }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="shipping_city" class="block text-sm font-medium text-gray-700">City</label>
+                                <input type="text" id="shipping_city" name="shipping_city" required 
+                                       value="{{ Auth::user()->default_shipping_city ?? '' }}"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="shipping_state" class="block text-sm font-medium text-gray-700">State</label>
+                                <input type="text" id="shipping_state" name="shipping_state" required 
+                                       value="{{ Auth::user()->default_shipping_state ?? '' }}"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="shipping_zip" class="block text-sm font-medium text-gray-700">ZIP Code</label>
+                                <input type="text" id="shipping_zip" name="shipping_zip" required 
+                                       value="{{ Auth::user()->default_shipping_zip ?? '' }}"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="shipping_country" class="block text-sm font-medium text-gray-700">Country</label>
+                                <input type="text" id="shipping_country" name="shipping_country" required 
+                                       value="{{ Auth::user()->default_shipping_country ?? '' }}"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="save_as_default" name="save_as_default" checked class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                            <label for="save_as_default" class="ml-2 block text-sm text-gray-900">
+                                Save as my default shipping address
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeCheckoutModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-medium">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 transition font-medium">
+                            Place Order
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -138,6 +202,28 @@
 
             // Initialize totals on page load
             updateTotals();
+
+            function openCheckoutModal() {
+                document.getElementById('checkoutModal').classList.remove('hidden');
+            }
+
+            function closeCheckoutModal() {
+                document.getElementById('checkoutModal').classList.add('hidden');
+            }
+
+            // Close modal when clicking outside
+            document.getElementById('checkoutModal')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeCheckoutModal();
+                }
+            });
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeCheckoutModal();
+                }
+            });
         </script>
     @else
         <div class="bg-white rounded-lg shadow-md p-8 text-center">
