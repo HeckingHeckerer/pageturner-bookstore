@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Address;
 use App\Models\Book;
 use App\Models\Cart;
 use App\Models\Order;
@@ -165,7 +166,10 @@ class OrderController extends Controller
                 ]);
             }
 
-            return redirect()->route('orders.show', $order)->with('success', 'Order placed successfully!');
+            // Save address to addresses table
+            $this->saveUserAddress($request, Auth::user());
+
+            return redirect()->route('orders.index')->with('success', 'Order placed successfully!');
         }
 
         // Handle cart checkout
@@ -228,7 +232,52 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('orders.show', $order)->with('success', 'Order placed successfully!');
+        // Save address to addresses table
+        $this->saveUserAddress($request, Auth::user());
+
+        return redirect()->route('orders.index')->with('success', 'Order placed successfully!');
+    }
+
+    /**
+     * Save user address to addresses table
+     */
+    private function saveUserAddress(Request $request, $user)
+    {
+        // Check if this address already exists for the user
+        $existingAddress = Address::where('user_id', $user->id)
+            ->where('address', $request->shipping_address)
+            ->where('city', $request->shipping_city)
+            ->where('state', $request->shipping_state)
+            ->where('zip', $request->shipping_zip)
+            ->where('country', $request->shipping_country)
+            ->first();
+
+        if (!$existingAddress) {
+            // Create new address
+            $address = Address::create([
+                'user_id' => $user->id,
+                'name' => $request->address_name ?? null,
+                'address' => $request->shipping_address,
+                'city' => $request->shipping_city,
+                'state' => $request->shipping_state,
+                'zip' => $request->shipping_zip,
+                'country' => $request->shipping_country,
+                'is_default' => $request->has('save_as_default'),
+            ]);
+
+            // If this is set as default, update other addresses
+            if ($request->has('save_as_default')) {
+                Address::where('user_id', $user->id)
+                    ->where('id', '!=', $address->id)
+                    ->update(['is_default' => false]);
+            }
+        } elseif ($request->has('save_as_default') && !$existingAddress->is_default) {
+            // Update existing address to be default
+            $existingAddress->update(['is_default' => true]);
+            Address::where('user_id', $user->id)
+                ->where('id', '!=', $existingAddress->id)
+                ->update(['is_default' => false]);
+        }
     }
 
     /**

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\Order;
 use App\Models\Review;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,18 @@ class ReviewController extends Controller
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
         ]);
+
+        // Check if user has purchased this book
+        $hasPurchased = Order::where('user_id', auth()->id())
+            ->whereHas('orderItems', function ($query) use ($book) {
+                $query->where('book_id', $book->id);
+            })
+            ->exists();
+
+        if (!$hasPurchased) {
+            return redirect()->route('books.show', $book)
+                ->with('error', 'You can only review books you have purchased.');
+        }
 
         $validated['user_id'] = auth()->id();
         $validated['book_id'] = $book->id;

@@ -87,6 +87,30 @@
                     @csrf
                     <div class="space-y-4">
                         <div>
+                            <label for="saved_addresses_cart" class="block text-sm font-medium text-gray-700">Select Saved Address (Optional)</label>
+                            <select id="saved_addresses_cart" onchange="populateAddressCart(this.value)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                                <option value="">-- Choose from saved addresses --</option>
+                                @auth
+                                    @foreach(Auth::user()->addresses as $address)
+                                        <option value="{{ $address->id }}" 
+                                                data-address="{{ $address->address }}"
+                                                data-city="{{ $address->city }}"
+                                                data-state="{{ $address->state }}"
+                                                data-zip="{{ $address->zip }}"
+                                                data-country="{{ $address->country }}">
+                                            {{ $address->name ? $address->name . ': ' : '' }}{{ $address->address }}, {{ $address->city }}
+                                        </option>
+                                    @endforeach
+                                @endauth
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="address_name" class="block text-sm font-medium text-gray-700">Address Name (Optional)</label>
+                            <input type="text" id="address_name" name="address_name" placeholder="e.g., Home, Work, etc." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <div>
                             <label for="shipping_address" class="block text-sm font-medium text-gray-700">Shipping Address</label>
                             <input type="text" id="shipping_address" name="shipping_address" required 
                                    value="{{ Auth::user()->default_shipping_address ?? '' }}"
@@ -224,6 +248,30 @@
                     closeCheckoutModal();
                 }
             });
+
+            function populateAddressCart(addressId) {
+                if (!addressId) {
+                    // Clear all fields if "Choose from saved addresses" is selected
+                    document.getElementById('address_name').value = '';
+                    document.getElementById('shipping_address').value = '';
+                    document.getElementById('shipping_city').value = '';
+                    document.getElementById('shipping_state').value = '';
+                    document.getElementById('shipping_zip').value = '';
+                    document.getElementById('shipping_country').value = '';
+                    return;
+                }
+
+                const select = document.getElementById('saved_addresses_cart');
+                const option = select.querySelector(`option[value="${addressId}"]`);
+                
+                if (option) {
+                    document.getElementById('shipping_address').value = option.getAttribute('data-address');
+                    document.getElementById('shipping_city').value = option.getAttribute('data-city');
+                    document.getElementById('shipping_state').value = option.getAttribute('data-state');
+                    document.getElementById('shipping_zip').value = option.getAttribute('data-zip');
+                    document.getElementById('shipping_country').value = option.getAttribute('data-country');
+                }
+            }
         </script>
     @else
         <div class="bg-white rounded-lg shadow-md p-8 text-center">

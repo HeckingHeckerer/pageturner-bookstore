@@ -101,30 +101,44 @@
 
     {{-- Review Form --}}
     @auth
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 class="font-semibold text-lg mb-4">Write a Review</h3>
-            <form action="{{ route('reviews.store', $book) }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">Rating</label>
-                    <div class="flex space-x-1">
-                        @for($i = 1; $i <= 5; $i++)
-                            <svg class="h-8 w-8 cursor-pointer star-rating text-gray-300 hover:text-yellow-400" data-rating="{{ $i }}" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                        @endfor
+        @php
+            $hasPurchased = \App\Models\Order::where('user_id', auth()->id())
+                ->whereHas('orderItems', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->exists();
+        @endphp
+
+        @if($hasPurchased)
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="font-semibold text-lg mb-4">Write a Review</h3>
+                <form action="{{ route('reviews.store', $book) }}" method="POST">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Rating</label>
+                        <div class="flex space-x-1">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="h-8 w-8 cursor-pointer star-rating text-gray-300 hover:text-yellow-400" data-rating="{{ $i }}" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            @endfor
+                        </div>
+                        <input type="hidden" name="rating" id="rating-input" required>
                     </div>
-                    <input type="hidden" name="rating" id="rating-input" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">Comment</label>
-                    <textarea name="comment" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Share your thoughts about this book..."></textarea>
-                </div>
-                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                    Submit Review
-                </button>
-            </form>
-        </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Comment</label>
+                        <textarea name="comment" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Share your thoughts about this book..."></textarea>
+                    </div>
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                        Submit Review
+                    </button>
+                </form>
+            </div>
+        @else
+            <x-alert type="info" class="mb-6">
+                You must <a href="{{ route('books.show', $book) }}" class="text-indigo-600 hover:underline">purchase this book</a> to write a review.
+            </x-alert>
+        @endauth
     @else
         <x-alert type="info" class="mb-6">
             <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Login</a> to write a review.
@@ -242,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <form id="buyNowForm" action="{{ route('orders.store') }}" method="POST">
+        <form id="buyNowForm" action="{{ route('orders.store') }}" method="POST" onsubmit="closeBuyNowModal()">
             @csrf
             <input type="hidden" id="modal-book-id" name="book_id" value="">
             <input type="hidden" name="quantity" value="1">
@@ -267,6 +281,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <div id="address-form-section" class="hidden">
                     <div class="space-y-4">
+                        <div>
+                            <label for="saved_addresses" class="block text-sm font-medium text-gray-700">Select Saved Address (Optional)</label>
+                            <select id="saved_addresses" onchange="populateAddress(this.value)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                                <option value="">-- Choose from saved addresses --</option>
+                                @auth
+                                    @foreach(Auth::user()->addresses as $address)
+                                        <option value="{{ $address->id }}" 
+                                                data-address="{{ $address->address }}"
+                                                data-city="{{ $address->city }}"
+                                                data-state="{{ $address->state }}"
+                                                data-zip="{{ $address->zip }}"
+                                                data-country="{{ $address->country }}">
+                                            {{ $address->name ? $address->name . ': ' : '' }}{{ $address->address }}, {{ $address->city }}
+                                        </option>
+                                    @endforeach
+                                @endauth
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="address_name" class="block text-sm font-medium text-gray-700">Address Name (Optional)</label>
+                            <input type="text" id="address_name" name="address_name" placeholder="e.g., Home, Work, etc." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+
                         <div>
                             <label for="shipping_address" class="block text-sm font-medium text-gray-700">Address</label>
                             <input type="text" id="shipping_address" name="shipping_address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
@@ -333,6 +371,12 @@ function openBuyNowModal(bookId, title, author, price, image) {
                 <p>{{ Auth::user()->default_shipping_city }}, {{ Auth::user()->default_shipping_state }} {{ Auth::user()->default_shipping_zip }}</p>
                 <p>{{ Auth::user()->default_shipping_country }}</p>
             `;
+            // Populate form fields with default values even though form is hidden
+            document.getElementById('shipping_address').value = '{{ Auth::user()->default_shipping_address }}';
+            document.getElementById('shipping_city').value = '{{ Auth::user()->default_shipping_city }}';
+            document.getElementById('shipping_state').value = '{{ Auth::user()->default_shipping_state }}';
+            document.getElementById('shipping_zip').value = '{{ Auth::user()->default_shipping_zip }}';
+            document.getElementById('shipping_country').value = '{{ Auth::user()->default_shipping_country }}';
         @else
             // Show address form
             document.getElementById('existing-address-section').classList.add('hidden');
@@ -361,6 +405,30 @@ function editAddress() {
 
     document.getElementById('existing-address-section').classList.add('hidden');
     document.getElementById('address-form-section').classList.remove('hidden');
+}
+
+function populateAddress(addressId) {
+    if (!addressId) {
+        // Clear all fields if "Choose from saved addresses" is selected
+        document.getElementById('address_name').value = '';
+        document.getElementById('shipping_address').value = '';
+        document.getElementById('shipping_city').value = '';
+        document.getElementById('shipping_state').value = '';
+        document.getElementById('shipping_zip').value = '';
+        document.getElementById('shipping_country').value = '';
+        return;
+    }
+
+    const select = document.getElementById('saved_addresses');
+    const option = select.querySelector(`option[value="${addressId}"]`);
+    
+    if (option) {
+        document.getElementById('shipping_address').value = option.getAttribute('data-address');
+        document.getElementById('shipping_city').value = option.getAttribute('data-city');
+        document.getElementById('shipping_state').value = option.getAttribute('data-state');
+        document.getElementById('shipping_zip').value = option.getAttribute('data-zip');
+        document.getElementById('shipping_country').value = option.getAttribute('data-country');
+    }
 }
 
 // Close modal when clicking outside
