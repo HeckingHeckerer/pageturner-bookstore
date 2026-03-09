@@ -84,25 +84,21 @@
                                 </div>
 
                                 <!-- Order Actions -->
-                                <div class="mt-4 pt-4 border-t flex justify-between items-center">
+                                <div class="mt-4 pt-4 border-t flex justify-between items-center" id="actions-{{ $order->id }}">
                                     <a href="{{ route('admin.orders.show', $order) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
                                         ← View Full Details
                                     </a>
-                                    @if($order->status !== 'cancelled')
+                                    @if($order->status === 'pending')
                                         <div class="flex space-x-2">
-                                            <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="status" value="processing">
-                                                <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Approve</button>
-                                            </form>
-                                            <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="status" value="cancelled">
-                                                <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Reject</button>
-                                            </form>
+                                            <button type="button" onclick="confirmAction({{ $order->id }}, 'approve')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Approve</button>
+                                            <button type="button" onclick="confirmAction({{ $order->id }}, 'reject')" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Reject</button>
                                         </div>
+                                    @elseif($order->status === 'processing')
+                                        <span class="text-green-600 font-medium">Order Approved</span>
+                                    @elseif($order->status === 'cancelled')
+                                        <span class="text-red-600 font-medium">Order Rejected</span>
+                                    @else
+                                        <span class="text-blue-600 font-medium">Order {{ ucfirst($order->status) }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -121,4 +117,111 @@
         </div>
     @endif
 </div>
+
+<!-- Confirmation Modal -->
+<div id="confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg font-medium text-gray-900" id="modal-title">Confirm Action</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500" id="modal-message">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="flex items-center px-4 py-3">
+                <input id="dont-ask-again" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <label for="dont-ask-again" class="ml-2 block text-sm text-gray-900">
+                    Don't ask me again
+                </label>
+            </div>
+            <div class="flex items-center px-4 py-3">
+                <button id="confirm-btn" class="px-4 py-2 bg-indigo-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    Confirm
+                </button>
+                <button id="cancel-btn" class="ml-3 px-4 py-2 bg-gray-300 text-gray-900 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderId = null;
+let currentAction = null;
+let dontAskAgain = localStorage.getItem('adminOrderDontAskAgain') === 'true';
+
+function confirmAction(orderId, action) {
+    currentOrderId = orderId;
+    currentAction = action;
+
+    if (dontAskAgain) {
+        // Skip confirmation and directly submit
+        submitAction();
+        return;
+    }
+
+    // Show modal
+    const modal = document.getElementById('confirmation-modal');
+    const title = document.getElementById('modal-title');
+    const message = document.getElementById('modal-message');
+
+    title.textContent = action === 'approve' ? 'Confirm Approval' : 'Confirm Rejection';
+    message.textContent = `Are you sure you want to ${action} order #${orderId}?`;
+
+    modal.classList.remove('hidden');
+}
+
+document.getElementById('confirm-btn').addEventListener('click', function() {
+    const checkbox = document.getElementById('dont-ask-again');
+    if (checkbox.checked) {
+        dontAskAgain = true;
+        localStorage.setItem('adminOrderDontAskAgain', 'true');
+    }
+
+    document.getElementById('confirmation-modal').classList.add('hidden');
+    submitAction();
+});
+
+document.getElementById('cancel-btn').addEventListener('click', function() {
+    document.getElementById('confirmation-modal').classList.add('hidden');
+    currentOrderId = null;
+    currentAction = null;
+});
+
+function submitAction() {
+    if (!currentOrderId || !currentAction) return;
+
+    // Create and submit form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/orders/${currentOrderId}/status`;
+    form.style.display = 'none';
+
+    // CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
+    }
+
+    // Method
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'PATCH';
+    form.appendChild(methodInput);
+
+    // Status
+    const statusInput = document.createElement('input');
+    statusInput.type = 'hidden';
+    statusInput.name = 'status';
+    statusInput.value = currentAction === 'approve' ? 'processing' : 'cancelled';
+    form.appendChild(statusInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
 @endsection
