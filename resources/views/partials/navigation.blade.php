@@ -66,7 +66,11 @@ Cart {{ auth()->user()->cart()->count() ? '(' . auth()->user()->cart()->count() 
 
 class="hover:bg-indigo-700 px-3 py-2 rounded-md">
 
+@if(auth()->user()->isAdmin())
+View Orders
+@else
 My Orders
+@endif
 </a>
 <span class="text-indigo-200">{{ auth()->user()->name }}</span>
 

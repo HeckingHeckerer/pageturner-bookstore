@@ -84,10 +84,26 @@
                                 </div>
 
                                 <!-- Order Actions -->
-                                <div class="mt-4 pt-4 border-t flex justify-end">
+                                <div class="mt-4 pt-4 border-t flex justify-between items-center">
                                     <a href="{{ route('admin.orders.show', $order) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
-                                        View Full Details →
+                                        ← View Full Details
                                     </a>
+                                    @if($order->status !== 'cancelled')
+                                        <div class="flex space-x-2">
+                                            <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="processing">
+                                                <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Approve</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="cancelled">
+                                                <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Reject</button>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach

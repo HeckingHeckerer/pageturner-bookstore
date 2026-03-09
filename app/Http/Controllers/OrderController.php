@@ -355,4 +355,31 @@ class OrderController extends Controller
             return view('orders.show', compact('order'));
         }
     }
+
+    /**
+     * Update order status by admin.
+     */
+    public function updateStatus(Order $order, Request $request)
+    {
+        // Only allow admin
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Cannot update if already cancelled
+        if ($order->status === 'cancelled') {
+            return redirect()->back()->with('error', 'Cannot update status of a cancelled order.');
+        }
+
+        $request->validate([
+            'status' => 'required|in:processing,completed,cancelled',
+        ]);
+
+        $newStatus = $request->status;
+
+        // Prevent invalid transitions if needed, but for now allow as per request
+        $order->update(['status' => $newStatus]);
+
+        return redirect()->back()->with('success', 'Order status updated to ' . ucfirst($newStatus) . '.');
+    }
 }
