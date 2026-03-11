@@ -55,6 +55,9 @@ My Orders
 @endif
 </a>
 
+<!-- Notification Dropdown -->
+@include('components.notification-dropdown')
+
 <x-dropdown align="right" width="64">
     <x-slot name="trigger">
         <button class="hover:bg-indigo-700 px-3 py-2 rounded-md text-indigo-200">

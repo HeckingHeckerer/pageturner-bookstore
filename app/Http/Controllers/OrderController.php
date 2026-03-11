@@ -7,10 +7,18 @@ use App\Models\Book;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 class OrderController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Display the shopping cart.
      */
@@ -151,6 +159,12 @@ class OrderController extends Controller
                 'unit_price' => $book->price
             ]);
 
+            // Send notifications
+            $this->notificationService->notifyOrderPlaced(Auth::user(), $order->id, $total);
+            foreach ($this->notificationService->getAdminUsers() as $admin) {
+                $this->notificationService->notifyAdminNewOrder($admin, $order->id, $total);
+            }
+
             // Update stock
             $book->decrement('stock_quantity', $quantity);
 
@@ -215,6 +229,12 @@ class OrderController extends Controller
             // Update stock
             $book = Book::find($item['book_id']);
             $book->decrement('stock_quantity', $item['quantity']);
+        }
+
+        // Send notifications for cart checkout
+        $this->notificationService->notifyOrderPlaced(Auth::user(), $order->id, $total);
+        foreach ($this->notificationService->getAdminUsers() as $admin) {
+            $this->notificationService->notifyAdminNewOrder($admin, $order->id, $total);
         }
 
         // Clear cart from database
@@ -378,6 +398,9 @@ class OrderController extends Controller
 
         // Prevent invalid transitions if needed, but for now allow as per request
         $order->update(['status' => $newStatus]);
+
+        // Send notification to customer about status change
+        $this->notificationService->notifyOrderStatusChanged($order->user, $order->id, $newStatus);
 
         return redirect()->back()->with('success', 'Order status updated to ' . ucfirst($newStatus) . '.');
     }

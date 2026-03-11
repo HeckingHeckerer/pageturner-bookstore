@@ -3,10 +3,18 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\Review;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function store(Request $request, Book $book)
     {
         $validated = $request->validate([
@@ -38,8 +46,13 @@ class ReviewController extends Controller
             $existingReview->update($validated);
             $message = 'Review updated successfully!';
         } else {
-            Review::create($validated);
+            $review = Review::create($validated);
             $message = 'Review submitted successfully!';
+            
+            // Send notification to admins about new review
+            foreach ($this->notificationService->getAdminUsers() as $admin) {
+                $this->notificationService->notifyAdminNewReview($admin, $review->id, $book->title, $review->rating);
+            }
         }
 
         return redirect()->route('books.show', $book)

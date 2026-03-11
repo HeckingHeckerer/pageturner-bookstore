@@ -51,6 +51,15 @@ public function reviews()
 return $this->hasMany(Review::class);
 }
 
+/**
+ * Get the notifications for the user.
+ * Override the default Notifiable relationship to use our custom notifications table.
+ */
+public function notifications()
+{
+    return $this->hasMany(\App\Models\Notification::class, 'user_id');
+}
+
 
 
 // Helper method
