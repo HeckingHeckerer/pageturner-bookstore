@@ -8,8 +8,13 @@ use App\Models\Book;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
+use App\Notifications\NewOrderAdminNotification;
+use App\Notifications\OrderPlacedNotification;
+use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 class OrderController extends Controller
 {
     /**
@@ -169,6 +174,9 @@ class OrderController extends Controller
             // Save address to addresses table
             $this->saveUserAddress($request, Auth::user());
 
+            // Send notifications
+            $this->sendOrderNotifications($order);
+
             return redirect()->route('orders.index')->with('success', 'Order placed successfully!');
         }
 
@@ -235,7 +243,23 @@ class OrderController extends Controller
         // Save address to addresses table
         $this->saveUserAddress($request, Auth::user());
 
+        // Send notifications
+        $this->sendOrderNotifications($order);
+
         return redirect()->route('orders.index')->with('success', 'Order placed successfully!');
+    }
+
+    /**
+     * Send order notifications to customer and admin
+     */
+    private function sendOrderNotifications(Order $order): void
+    {
+        // Notify customer
+        $order->user->notify(new OrderPlacedNotification($order));
+
+        // Notify admins
+        $admins = User::where('role', 'admin')->get();
+        Notification::send($admins, new NewOrderAdminNotification($order));
     }
 
     /**
@@ -377,8 +401,14 @@ class OrderController extends Controller
 
         $newStatus = $request->status;
 
-        // Prevent invalid transitions if needed, but for now allow as per request
+        // Get old status before update
+        $oldStatus = $order->status;
+
+        // Update order status
         $order->update(['status' => $newStatus]);
+
+        // Notify customer about status change
+        $order->user->notify(new OrderStatusChangedNotification($order, $oldStatus));
 
         return redirect()->back()->with('success', 'Order status updated to ' . ucfirst($newStatus) . '.');
     }
