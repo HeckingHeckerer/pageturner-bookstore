@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -6,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\Review;
+use App\Models\User;
+use App\Notifications\NewReviewAdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class ReviewController extends Controller
 {
@@ -42,12 +44,24 @@ class ReviewController extends Controller
             $existingReview->update($validated);
             $message = 'Review updated successfully!';
         } else {
-            Review::create($validated);
+            $review = Review::create($validated);
             $message = 'Review submitted successfully!';
+            
+            // Notify admins about new review
+            $this->sendNewReviewNotification($review);
         }
 
         return redirect()->route('books.show', $book)
             ->with('success', $message);
+    }
+
+    /**
+     * Send notification to admins about new review
+     */
+    private function sendNewReviewNotification(Review $review): void
+    {
+        $admins = User::where('role', 'admin')->get();
+        Notification::send($admins, new NewReviewAdminNotification($review));
     }
 
     public function destroy(Review $review)
@@ -64,4 +78,3 @@ class ReviewController extends Controller
             ->with('success', 'Review deleted successfully!');
     }
 }
-

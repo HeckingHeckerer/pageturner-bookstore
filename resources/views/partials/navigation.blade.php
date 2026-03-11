@@ -1,4 +1,3 @@
-
 <nav class="bg-indigo-600 text-white shadow-lg">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 <div class="flex justify-between h-16">
@@ -56,11 +55,10 @@ My Orders
 @endif
 </a>
 
-<!-- User Account Dropdown -->
 <x-dropdown align="right" width="64">
     <x-slot name="trigger">
-        <button class="hover:bg-indigo-700 px-3 py-2 rounded-md text-indigo-200 flex items-center">
-            <span>{{ auth()->user()->name }}</span>
+        <button class="hover:bg-indigo-700 px-3 py-2 rounded-md text-indigo-200">
+            {{ auth()->user()->name }}
         </button>
     </x-slot>
 
@@ -105,5 +103,4 @@ My Orders
 </div>
 </div>
 </nav>
-
 
