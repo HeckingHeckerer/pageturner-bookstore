@@ -1,4 +1,22 @@
 <nav class="bg-indigo-600 text-white shadow-lg">
+@auth
+    @if(!auth()->user()->hasVerifiedEmail())
+        <div class="bg-yellow-500 text-black px-4 py-2 text-sm">
+            <div class="flex items-center justify-between">
+                <span><strong>Email Verification Required:</strong> Please check your email to verify your account. 
+                <form method="POST" action="{{ route('verification.send') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="underline hover:text-gray-800 bg-transparent border-none cursor-pointer">Resend verification email</button>
+                </form>
+                </span>
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="text-sm hover:text-gray-800 underline">Log Out</button>
+                </form>
+            </div>
+        </div>
+    @endif
+@endauth
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 <div class="flex justify-between h-16">
 <div class="flex items-center">

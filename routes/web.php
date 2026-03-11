@@ -24,32 +24,35 @@ Route::middleware('auth')->group(function () {
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// Review routes
-Route::post('/books/{book}/reviews', [ReviewController::class,
-'store'])->name('reviews.store');
-Route::delete('/reviews/{review}', [ReviewController::class,
-'destroy'])->name('reviews.destroy');
-// Cart routes
-Route::post('/cart/add/{book}', [OrderController::class, 'addToCart'])->name('cart.add');
-Route::delete('/cart/remove/{book}', [OrderController::class, 'removeFromCart'])->name('cart.remove');
-Route::patch('/cart/update/{book}', [OrderController::class, 'updateCart'])->name('cart.update');
-Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
-// Order routes
 
-
-
-Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
-Route::patch('/orders/{order}/shipping', [OrderController::class, 'updateShipping'])->name('orders.updateShipping');
-
-// Notification routes
-Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
-Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-Route::get('/notifications/count', [NotificationController::class, 'getCount']);
-Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+// Routes that require email verification
+Route::middleware('verified')->group(function () {
+    // Review routes
+    Route::post('/books/{book}/reviews', [ReviewController::class,
+    'store'])->name('reviews.store');
+    Route::delete('/reviews/{review}', [ReviewController::class,
+    'destroy'])->name('reviews.destroy');
+    
+    // Cart routes
+    Route::post('/cart/add/{book}', [OrderController::class, 'addToCart'])->name('cart.add');
+    Route::delete('/cart/remove/{book}', [OrderController::class, 'removeFromCart'])->name('cart.remove');
+    Route::patch('/cart/update/{book}', [OrderController::class, 'updateCart'])->name('cart.update');
+    Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
+    
+    // Order routes
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::patch('/orders/{order}/shipping', [OrderController::class, 'updateShipping'])->name('orders.updateShipping');
+    
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::get('/notifications/count', [NotificationController::class, 'getCount']);
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
 });
 // Admin-only routes (Category & Book management)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

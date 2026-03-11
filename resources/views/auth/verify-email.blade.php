@@ -20,6 +20,16 @@
             </div>
         </form>
 
+        <!-- Development: Direct verification link for testing -->
+        @if(app()->environment('local', 'testing'))
+            <div>
+                <a href="{{ route('verification.verify', ['id' => auth()->id() ?? 1, 'hash' => sha1('test@example.com')]) }}" 
+                   class="ml-4 text-sm text-blue-600 hover:text-blue-800 underline">
+                    {{ __('Verify Email (Development)') }}
+                </a>
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('logout') }}">
             @csrf
 
