@@ -23,10 +23,17 @@
         <!-- Development: Direct verification link for testing -->
         @if(app()->environment('local', 'testing'))
             <div>
-                <a href="{{ route('verification.verify', ['id' => auth()->id() ?? 1, 'hash' => sha1('test@example.com')]) }}" 
-                   class="ml-4 text-sm text-blue-600 hover:text-blue-800 underline">
-                    {{ __('Verify Email (Development)') }}
-                </a>
+                @if(auth()->check())
+                    <a href="{{ route('verification.verify', ['id' => auth()->id(), 'hash' => sha1(auth()->user()->getEmailForVerification())]) }}" 
+                       class="ml-4 text-sm text-blue-600 hover:text-blue-800 underline">
+                        {{ __('Verify Email (Development)') }}
+                    </a>
+                @else
+                    <a href="{{ route('verification.verify', ['id' => 1, 'hash' => sha1('user@example.com')]) }}" 
+                       class="ml-4 text-sm text-blue-600 hover:text-blue-800 underline">
+                        {{ __('Verify Email (Development)') }}
+                    </a>
+                @endif
             </div>
         @endif
 
