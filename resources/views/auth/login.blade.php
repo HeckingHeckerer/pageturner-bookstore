@@ -12,10 +12,11 @@
         </button>
     </div>
 
-    <!-- Customer Login Form -->
+<!-- Customer Login Form -->
     <div id="customer-form" class="tab-content">
         <form method="POST" action="{{ route('login') }}">
             @csrf
+            <input type="hidden" name="login_type" value="customer">
 
             <!-- Email Address -->
             <div>
@@ -67,10 +68,11 @@
         </form>
     </div>
 
-    <!-- Admin Login Form -->
+<!-- Admin Login Form -->
     <div id="admin-form" class="tab-content hidden">
         <form method="POST" action="{{ route('login') }}">
             @csrf
+            <input type="hidden" name="login_type" value="admin">
 
             <!-- Email Address -->
             <div>

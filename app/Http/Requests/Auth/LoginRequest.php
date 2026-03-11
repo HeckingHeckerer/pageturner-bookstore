@@ -29,6 +29,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'login_type' => ['nullable', 'string', 'in:customer,admin'],
         ];
     }
 
@@ -47,6 +48,18 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        // Check if user is trying to login as admin but is not an admin
+        if ($this->input('login_type') === 'admin') {
+            $user = Auth::user();
+            if (!$user || !$user->isAdmin()) {
+                Auth::logout();
+                RateLimiter::hit($this->throttleKey());
+                throw ValidationException::withMessages([
+                    'email' => 'You are not authorized to access the admin area.',
+                ]);
+            }
         }
 
         RateLimiter::clear($this->throttleKey());
