@@ -35,10 +35,24 @@ class NotificationService
      */
     public function notifyOrderStatusChanged(User $customer, int $orderId, string $status): Notification
     {
+        // Get book names from the order
+        $order = \App\Models\Order::with('orderItems.book')->find($orderId);
+        $bookNames = $order ? $order->orderItems->pluck('book.title')->toArray() : [];
+        
+        $bookNamesText = '';
+        if (!empty($bookNames)) {
+            if (count($bookNames) == 1) {
+                $bookNamesText = " [{$bookNames[0]}]";
+            } else {
+                $bookNamesText = " [" . implode(', ', $bookNames) . "]";
+            }
+        }
+
         return $this->createNotification($customer, 'order_status_changed', [
             'order_id' => $orderId,
             'status' => $status,
-            'message' => "Your order #{$orderId} status has been updated to: {$status}"
+            'book_names' => $bookNames,
+            'message' => "Your order #{$orderId}{$bookNamesText} status has been updated to: {$status}"
         ]);
     }
 
