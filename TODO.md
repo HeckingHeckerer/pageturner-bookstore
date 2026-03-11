@@ -1,3 +1,4 @@
+
 # TODO - PageTurner Bookstore Updates
 
 ## Completed Tasks
@@ -12,23 +13,9 @@
 - Added server-side validation to check admin role
 - Returns error "You are not authorized to access the admin area." for non-admin users
 
-### 3. Notification System
-
-#### Order Notifications
-- **OrderPlacedNotification**: Notifies customers when an order is placed
-- **OrderStatusChangedNotification**: Notifies customers when order status changes
-- **NewOrderAdminNotification**: Notifies administrators when a new order is created
-
-#### Review Notifications
-- **NewReviewAdminNotification**: Notifies administrators when a new review is submitted
-
-#### Files Created:
-- `app/Notifications/OrderPlacedNotification.php`
-- `app/Notifications/OrderStatusChangedNotification.php`
-- `app/Notifications/NewOrderAdminNotification.php`
-- `app/Notifications/NewReviewAdminNotification.php`
-
-#### Controllers Updated:
-- `app/Http/Controllers/OrderController.php` - Added notification calls in `store()` and `updateStatus()` methods
-- `app/Http/Controllers/ReviewController.php` - Added notification call in `store()` method
+### 3. Notification System (REVERTED)
+- Reverted all notification-related changes due to issues
+- Removed notification files and controllers
+- Reverted OrderController and ReviewController to original state
+- Reverted navigation to remove bell icon
 
