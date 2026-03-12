@@ -90,10 +90,10 @@
                     </div>
                 @endif
 
-                <!-- Read Notifications Section -->
+                <!-- Marked Messages Section -->
                 @if($readNotifications->isNotEmpty())
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Read Notifications</h3>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Marked Messages</h3>
                         <div class="space-y-4">
                             @foreach($readNotifications as $notification)
                                 <div class="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
