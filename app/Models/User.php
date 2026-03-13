@@ -48,6 +48,11 @@ public function cart()
 return $this->hasMany(Cart::class);
 }
 
+public function cartItems()
+{
+return $this->cart();
+}
+
 public function reviews()
 {
 return $this->hasMany(Review::class);
