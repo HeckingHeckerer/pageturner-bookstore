@@ -10,7 +10,7 @@
         </div>
 
         <!-- Management Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Books Management Card -->
             <div class="bg-white rounded-lg shadow hover:shadow-lg transition">
                 <div class="p-6">
@@ -82,10 +82,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Users Management Card -->
+            <div class="bg-white rounded-lg shadow hover:shadow-lg transition">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900">Users</h2>
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-600 mb-6">Manage user accounts. Create, edit roles, and monitor activity.</p>
+                    <div class="space-y-2">
+                        <a href="{{ route('admin.users.index') }}" class="block w-full text-center bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition">
+                            View All Users
+                        </a>
+                        <a href="{{ route('admin.users.create') }}" class="block w-full text-center bg-purple-100 text-purple-600 py-2 rounded hover:bg-purple-200 transition">
+                            Add New User
+                        </a>
+                        <a href="{{ route('admin.users.index') }}" class="block w-full text-center bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 transition" onclick="openEditUsersModal(); return false;">
+                            Edit Users
+                        </a>
+                        <a href="{{ route('admin.users.index') }}" class="block w-full text-center bg-red-600 text-white py-2 rounded hover:bg-red-700 transition" onclick="openDeleteUsersModal(); return false;">
+                            Delete Users
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Quick Stats (Optional) -->
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Quick Stats -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-gray-600 text-sm font-semibold uppercase">Total Books</h3>
                 <p class="mt-2 text-3xl font-bold text-gray-900">{{ \App\Models\Book::count() }}</p>
@@ -97,6 +124,10 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-gray-600 text-sm font-semibold uppercase">Total Orders</h3>
                 <p class="mt-2 text-3xl font-bold text-gray-900">{{ \App\Models\Order::count() }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-gray-600 text-sm font-semibold uppercase">Total Users</h3>
+                <p class="mt-2 text-3xl font-bold text-gray-900">{{ \App\Models\User::count() }}</p>
             </div>
         </div>
     </div>

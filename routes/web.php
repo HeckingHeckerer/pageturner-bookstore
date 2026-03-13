@@ -86,5 +86,8 @@ Route::get('/books/search', [BookController::class, 'search'])->name('books.sear
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+
+// User management
+Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
 });
 require __DIR__.'/auth.php';

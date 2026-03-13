@@ -1,33 +1,35 @@
-# TODO - User Profile Dropdown in Navigation
+# Admin User Management CRUD Implementation
 
-## Task: Make user's name clickable in navigation and display simple information
+## Steps to Complete:
 
-### Steps:
-- [x] 1. Analyze the codebase and understand the navigation structure
-- [x] 2. Create a plan and get user confirmation
-- [x] 3. Modify navigation.blade.php to add clickable dropdown for user name
-- [x] 4. Test the implementation
+### 1. [x] Create app/Http/Controllers/Admin/UserController.php
+   - Implement index (list users with pagination), create, store, show, edit, update, destroy methods
+   - Use validation, password hashing, authorization
 
-### Details:
-- Current state: User name is displayed as plain text `<span class="text-indigo-200">{{ auth()->user()->name }}</span>`
-- Target: Replace with dropdown component showing email, address, and profile link
+### 2. [x] Create resources/views/admin/users/index.blade.php
+   - User table with name, email, role, joined date, actions (edit/delete)
+   - Search/filter, pagination
+   - Total user count display
+   - Match admin UI style (Tailwind, cards/tables)
 
-## Completed:
-- Updated navigation.blade.php with dropdown component
-- User's name is now clickable
-- Dropdown displays: name, email, shipping address (if available), profile settings link, and logout option
+### 3. [x] Create resources/views/admin/users/create.blade.php
+   - Form: name, email, password, confirm password, role (select: user/admin), shipping fields
+   - Use Laravel components (text-input, primary-button)
+   - Match create.blade.php patterns from books/categories
 
-## Additional Bug Fix - Admin Login Security
+### 4. [x] Create resources/views/admin/users/edit.blade.php
+   - Pre-filled form for update (password optional)
+   - Match edit.blade.php patterns
 
-### Issue:
-Customer accounts were able to log in via the Admin Login tab on the login page.
+### 5. [x] Update routes/web.php
+   - Add `Route::resource('users', UserController::class);` in admin middleware group
 
-### Fix Applied:
-1. **resources/views/auth/login.blade.php**: Added hidden input fields `login_type` to distinguish between customer and admin login forms
-2. **app/Http/Requests/Auth/LoginRequest.php**: Added server-side validation to check if the user has admin role when logging in via admin tab
+### 6. [x] Update resources/views/admin/dashboard.blade.php
+    - Add Users stat card in quick stats grid: `{{ \\App\\Models\\User::count() }}`
+    - Add Users management card matching Books/Categories/Orders (View All, Add New, Edit, Delete buttons linking to routes)
 
-### Changes:
-- Added `login_type` validation rule (nullable, string, in:customer,admin)
-- After authentication, if login_type is "admin", verifies user has admin role
-- Returns error message "You are not authorized to access the admin area." if validation fails
-
+### 7. [x] Test Implementation
+   - Routes confirmed via `php artisan route:list`: admin.users.* routes exist
+   - Files created: UserController, users/index/create/edit views
+   - Dashboard updated with Users card and total count stat
+   - Ready for browser testing: `php artisan serve`, login as admin, visit /admin, /admin/users
