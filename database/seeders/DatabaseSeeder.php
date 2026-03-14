@@ -19,11 +19,13 @@ class DatabaseSeeder extends Seeder
         // Seed books
         $this->call(BookSeeder::class);
         
-        // Create admin user
+        // Create admin user with specific credentials
         User::factory()->create([
             'name' => 'Admin User',
-            'email' => 'admin@pageturner.com',
+            'email' => 's.villarino.victorykyle@cmu.edu.ph',
+            'password' => bcrypt('12345678'),
             'role' => 'admin',
+            'email_verified_at' => now(), // Skip email verification
         ]);
 
         // Create customer users
