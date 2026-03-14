@@ -18,6 +18,9 @@ protected $fillable = [
         'default_shipping_state',
         'default_shipping_zip',
         'default_shipping_country',
+        'two_factor_enabled',
+        'two_factor_code',
+        'two_factor_expires_at',
     ];
 protected $hidden = [
 'password',
@@ -29,8 +32,58 @@ protected function casts(): array
 return [
 'email_verified_at' => 'datetime',
 'password' => 'hashed',
+'two_factor_enabled' => 'boolean',
+'two_factor_expires_at' => 'datetime',
 ];
 
+}
+
+/**
+ * Generate a two-factor authentication code
+ */
+public function generateTwoFactorCode()
+{
+    $this->two_factor_code = rand(1000, 9999);
+    $this->two_factor_expires_at = now()->addMinutes(10);
+    $this->save();
+    
+    return $this->two_factor_code;
+}
+
+/**
+ * Verify a two-factor authentication code
+ */
+public function verifyTwoFactorCode($code)
+{
+    if ($this->two_factor_code === $code && $this->two_factor_expires_at > now()) {
+        // Clear the code after successful verification
+        $this->two_factor_code = null;
+        $this->two_factor_expires_at = null;
+        $this->save();
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+ * Disable two-factor authentication
+ */
+public function disableTwoFactor()
+{
+    $this->two_factor_enabled = false;
+    $this->two_factor_code = null;
+    $this->two_factor_expires_at = null;
+    $this->save();
+}
+
+/**
+ * Enable two-factor authentication
+ */
+public function enableTwoFactor()
+{
+    $this->two_factor_enabled = true;
+    $this->save();
 }
 // Relationships
 public function orders()

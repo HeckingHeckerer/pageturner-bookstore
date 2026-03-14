@@ -50,10 +50,19 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Check if user has verified their email address
+        $user = Auth::user();
+        if (!$user->hasVerifiedEmail()) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'email' => 'You must verify your email address before logging in. Please check your email for a verification link.',
+            ]);
+        }
+
         // Check if user is trying to login as admin but is not an admin
         if ($this->input('login_type') === 'admin') {
-            $user = Auth::user();
-            if (!$user || !$user->isAdmin()) {
+            if (!$user->isAdmin()) {
                 Auth::logout();
                 RateLimiter::hit($this->throttleKey());
                 throw ValidationException::withMessages([

@@ -28,6 +28,22 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Check if two-factor authentication is enabled
+        $user = Auth::user();
+        if ($user->two_factor_enabled) {
+            // Generate and send two-factor code
+            $code = $user->generateTwoFactorCode();
+            
+            // For demo purposes, we'll flash the code to the session
+            // In a real application, you would send this via email
+            session()->flash('two_factor_code', $code);
+            
+            // Mark that two-factor verification is required
+            session()->put('two_factor_required', true);
+            
+            return redirect()->route('two-factor.verification');
+        }
+
         return redirect()->intended(route('home', absolute: false));
     }
 

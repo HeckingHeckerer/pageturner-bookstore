@@ -6,6 +6,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -20,10 +21,17 @@ Route::get('/categories/{category}', [CategoryController::class,
 'show'])->name('categories.show');
 // Authenticated routes
 Route::middleware('auth')->group(function () {
-// Profile routes (from Breeze)
-Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Two-Factor Authentication routes
+    Route::get('/two-factor/verification', [TwoFactorController::class, 'showVerificationForm'])->name('two-factor.verification');
+    Route::post('/two-factor/verify', [TwoFactorController::class, 'verify'])->name('two-factor.verify');
+    Route::post('/two-factor/resend', [TwoFactorController::class, 'resend'])->name('two-factor.resend');
+    Route::get('/two-factor/settings', [TwoFactorController::class, 'showSettings'])->name('two-factor.settings');
+    Route::put('/two-factor/settings', [TwoFactorController::class, 'updateSettings'])->name('two-factor.settings.update');
+
+    // Profile routes (from Breeze)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 // Routes that require email verification
 Route::middleware('verified')->group(function () {
